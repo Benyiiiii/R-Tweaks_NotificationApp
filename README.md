@@ -5,8 +5,6 @@
 
 **R-Tweaks** is a lightweight, high-performance background service designed for Android handheld consoles. It introduces an interactive "Dynamic Capsule" that provides real-time system feedback without interrupting your gameplay. 
 
-Initially developed for the **Retroid Pocket 5**, this tool bridges the gap between aesthetic customization and hardware monitoring.
-
 ---
 
 ## ✨ Key Features
