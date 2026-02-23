@@ -39,9 +39,3 @@ Download the latest `app-debug.apk` from the **[Releases](link_to_your_release)*
 The app requires:
 * **Display over other apps**: To render the capsule on top of games.
 * **Notification Access**: For media sync and background service stability.
-
-### 3. Clear Status Bar (The "Clean Look")
-Android shows a persistent notification when apps display over others. To hide it and achieve a true "clean" aesthetic, use the following **ADB** command:
-
-```bash
-adb shell settings put secure system_alert_window_notification_visible 0
