@@ -50,6 +50,14 @@
                 android:text="2. Permiso de Notificaciones"
                 android:backgroundTint="#FF5252"
                 android:textColor="#FFFFFF"/>
+        <Button
+                android:id="@+id/btn_permiso_musica"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:text="3. Dar Acceso a Notificaciones (Spotify)"
+                android:textColor="#FFFFFF"
+                android:backgroundTint="#1DB954" />
     </LinearLayout>
 
     <LinearLayout

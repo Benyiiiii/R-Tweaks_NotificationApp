@@ -23,6 +23,13 @@
                 android:src="@android:drawable/ic_dialog_info"
                 app:tint="#00E5FF" />
 
+        <ImageView
+                android:id="@+id/img_album"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:scaleType="centerCrop"
+                android:visibility="gone" />
+
         <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"

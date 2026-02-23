@@ -5,11 +5,14 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.Service
 import android.content.BroadcastReceiver
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
-import android.graphics.Color
+import android.graphics.Bitmap
 import android.graphics.PixelFormat
+import android.media.MediaMetadata
+import android.media.session.MediaSessionManager
 import android.os.Build
 import android.os.Handler
 import android.os.IBinder
@@ -38,7 +41,6 @@ class OverlayService : Service() {
 
     private val receptorEnergia = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
-            // Leemos la configuración actual guardada en la app
             val sharedPrefs = context?.getSharedPreferences("RTweaksPrefs", Context.MODE_PRIVATE)
             val avisarBateria = sharedPrefs?.getBoolean("aviso_bateria", true) ?: true
             val avisarMusica = sharedPrefs?.getBoolean("aviso_musica", true) ?: true
@@ -61,33 +63,69 @@ class OverlayService : Service() {
                 }
                 Intent.ACTION_BATTERY_CHANGED -> {
                     if (avisarBateria) {
-                        // La temperatura viene en décimas (ej: 400 es 40°C)
                         val temperatura = (intent.getIntExtra(android.os.BatteryManager.EXTRA_TEMPERATURE, 0)) / 10
                         if (temperatura >= 45) {
                             actualizarUI("Alerta de Calor", "Consola a $temperatura°C - ¡Ojo!", "#FF5722", R.drawable.ic_temperatura)
                         }
                     }
                 }
+                // ¡AQUÍ ESTÁ LA MAGIA NUEVA DE SPOTIFY!
                 "com.spotify.music.metadatachanged", "com.android.music.metadatachanged" -> {
                     if (avisarMusica) {
                         val track = intent.getStringExtra("track") ?: "Canción"
                         val artist = intent.getStringExtra("artist") ?: "Artista"
-                        actualizarUI(track, artist, "#1DB954", R.drawable.ic_musica)
+
+                        var albumArt: Bitmap? = null
+
+                        try {
+                            val msm = context?.getSystemService(Context.MEDIA_SESSION_SERVICE) as MediaSessionManager
+                            // Ojo: Esto asume que creaste el archivo MediaListenerService.kt como te mencioné antes
+                            val componentName = ComponentName(context!!, MediaListenerService::class.java)
+                            val controllers = msm.getActiveSessions(componentName)
+
+                            for (controller in controllers) {
+                                if (controller.packageName.contains("spotify")) {
+                                    albumArt = controller.metadata?.getBitmap(MediaMetadata.METADATA_KEY_ALBUM_ART)
+                                    if (albumArt == null) {
+                                        albumArt = controller.metadata?.getBitmap(MediaMetadata.METADATA_KEY_ART)
+                                    }
+                                    break
+                                }
+                            }
+                        } catch (e: SecurityException) {
+                            // Si falta el permiso en el celular, pasa de largo y no se cae
+                        }
+
+                        actualizarUI(track, artist, "#1DB954", R.drawable.ic_musica, albumArt)
                     }
                 }
             }
         }
     }
 
-    // Esta es la función mágica que hace el cambio visual
-    private fun actualizarUI(titulo: String, subtitulo: String, colorHex: String, iconoRes: Int) {
-        tituloNotificacion.text = titulo
-        textoNotificacion.text = subtitulo
-        textoNotificacion.setTextColor(Color.parseColor(colorHex))
+    private fun actualizarUI(titulo: String, texto: String, colorHex: String, iconoRes: Int, bitmap: Bitmap? = null) {
+        val tvTitulo = overlayView.findViewById<TextView>(R.id.titulo_notificacion)
+        val tvTexto = overlayView.findViewById<TextView>(R.id.texto_notificacion)
+        tvTitulo.text = titulo
+        tvTexto.text = texto
 
-        // ¡Aquí le cambiamos el dibujo al ícono!
-        iconoNotificacion.setImageResource(iconoRes)
-        iconoNotificacion.setColorFilter(Color.parseColor(colorHex))
+        // ¡AQUÍ LE DEVOLVEMOS EL COLOR AL TEXTO!
+        tvTexto.setTextColor(android.graphics.Color.parseColor(colorHex))
+
+        val imgAlbum = overlayView.findViewById<ImageView>(R.id.img_album)
+        val iconoNormal = overlayView.findViewById<ImageView>(R.id.icono_notificacion)
+
+        if (bitmap != null) {
+            imgAlbum.setImageBitmap(bitmap)
+            imgAlbum.visibility = View.VISIBLE
+            iconoNormal.visibility = View.GONE
+        } else {
+            imgAlbum.visibility = View.GONE
+            iconoNormal.setImageResource(iconoRes)
+            // ¡Y AQUÍ TEÑIMOS EL ÍCONO PARA QUE COMBINE AL CIEN!
+            iconoNormal.setColorFilter(android.graphics.Color.parseColor(colorHex))
+            iconoNormal.visibility = View.VISIBLE
+        }
 
         mostrarCapsulaAnimada()
     }
@@ -106,16 +144,17 @@ class OverlayService : Service() {
         iconoNotificacion = overlayView.findViewById(R.id.icono_notificacion)
 
         val params = WindowManager.LayoutParams(
-            WindowManager.LayoutParams.WRAP_CONTENT, // ¡Aquí está el cambio clave!
+            WindowManager.LayoutParams.WRAP_CONTENT,
             WindowManager.LayoutParams.WRAP_CONTENT,
             WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
-            WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
+            // Agregamos FLAG_NOT_TOUCHABLE para que los toques pasen de largo
+            WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
+                    WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE or
+                    WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
             PixelFormat.TRANSLUCENT
         )
         params.gravity = Gravity.TOP or Gravity.CENTER_HORIZONTAL
 
-        // ESTADO INICIAL (El modo "Gota escondida")
-        // Achicamos la vista al 20% de su tamaño, la subimos un poco y la hacemos invisible
         overlayView.alpha = 0f
         overlayView.translationY = -150f
         overlayView.scaleX = 0.2f
@@ -123,7 +162,6 @@ class OverlayService : Service() {
 
         windowManager.addView(overlayView, params)
 
-        // Define el filtro con las acciones de energía y Spotify
         val filtroMúsica = IntentFilter().apply {
             addAction(Intent.ACTION_POWER_CONNECTED)
             addAction(Intent.ACTION_POWER_DISCONNECTED)
@@ -132,7 +170,6 @@ class OverlayService : Service() {
             addAction("com.spotify.music.metadatachanged")
         }
 
-        // Esta es la forma segura de registrarlo para que tu Motorola no lo mate
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             registerReceiver(receptorEnergia, filtroMúsica, Context.RECEIVER_EXPORTED)
         } else {
@@ -140,20 +177,14 @@ class OverlayService : Service() {
         }
     }
 
-    // --- LA MAGIA DE LA DYNAMIC ISLAND ---
-
     private fun mostrarCapsulaAnimada() {
         handler.removeCallbacks(esconderRunnable)
 
-        // El detector: preguntamos al sistema si la pantalla está acostada (horizontal)
         val esHorizontal = resources.configuration.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE
-
-        // Si está en horizontal, la frenamos 60 píxeles más abajo. Si está vertical, frena en 0.
         val posicionDescanso = if (esHorizontal) 20f else 0f
 
-        // Se infla como un globo mientras cae
         overlayView.animate()
-            .translationY(posicionDescanso) // ¡Aquí aplicamos el empujoncito!
+            .translationY(posicionDescanso)
             .scaleX(1f)
             .scaleY(1f)
             .alpha(1f)
@@ -165,18 +196,15 @@ class OverlayService : Service() {
     }
 
     private fun esconderCapsula() {
-        // Se chupa como una pasa, toma vuelito hacia abajo (Anticipate) y sale disparada p'arriba
         overlayView.animate()
             .translationY(-150f)
-            .scaleX(0.2f) // Vuelve a ser una bolita enana
+            .scaleX(0.2f)
             .scaleY(0.2f)
             .alpha(0f)
             .setDuration(400)
-            .setInterpolator(AnticipateInterpolator()) // Este efecto le da un "vuelito" antes de subir
+            .setInterpolator(AnticipateInterpolator())
             .start()
     }
-
-    // -----------------------------------
 
     private fun crearNotificacionForeground() {
         val channelId = "rtweaks_channel"

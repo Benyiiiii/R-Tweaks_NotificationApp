@@ -25,6 +25,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var panelAjustes: LinearLayout
     private lateinit var btnPermisoFlotar: Button
     private lateinit var btnPermisoNotif: Button
+    private lateinit var btnPermisoMusica: Button // Agregado como variable global
 
     private lateinit var switchBateria: Switch
     private lateinit var switchMusica: Switch
@@ -42,16 +43,18 @@ class MainActivity : AppCompatActivity() {
         panelAjustes = findViewById(R.id.panel_ajustes)
         btnPermisoFlotar = findViewById(R.id.btn_permiso_flotar)
         btnPermisoNotif = findViewById(R.id.btn_permiso_notif)
+        btnPermisoMusica = findViewById(R.id.btn_permiso_musica) // Inicializado aquí
+
         switchBateria = findViewById(R.id.switch_bateria)
         switchMusica = findViewById(R.id.switch_musica)
+        switchTemperatura = findViewById(R.id.switch_temperatura)
 
-        // Cargamos cómo dejaste los switches la última vez (por defecto activados)
+        // Cargamos cómo dejaste los switches
         switchBateria.isChecked = sharedPrefs.getBoolean("aviso_bateria", true)
         switchMusica.isChecked = sharedPrefs.getBoolean("aviso_musica", true)
-        switchTemperatura = findViewById(R.id.switch_temperatura)
         switchTemperatura.isChecked = sharedPrefs.getBoolean("aviso_temp", true)
 
-        // Si cambias un switch, lo guardamos al tiro
+        // Listeners para guardar ajustes
         switchBateria.setOnCheckedChangeListener { _, isChecked ->
             sharedPrefs.edit().putBoolean("aviso_bateria", isChecked).apply()
         }
@@ -62,8 +65,10 @@ class MainActivity : AppCompatActivity() {
             sharedPrefs.edit().putBoolean("aviso_temp", isChecked).apply()
         }
 
+        // Listeners de los botones
         btnPermisoFlotar.setOnClickListener { pedirPermisoFlotar() }
         btnPermisoNotif.setOnClickListener { pedirPermisoNotificaciones() }
+        btnPermisoMusica.setOnClickListener { pedirPermisoListenerMusica() }
     }
 
     override fun onResume() {
@@ -74,6 +79,7 @@ class MainActivity : AppCompatActivity() {
     private fun actualizarInterfaz() {
         val tieneFlotar = tienePermisoParaFlotar()
         val tieneNotif = tienePermisoNotificaciones()
+        val tieneMusica = tienePermisoListenerNotificaciones() // Nueva comprobación para Spotify
 
         if (tieneFlotar) {
             btnPermisoFlotar.text = "✅ Superposición Lista"
@@ -87,8 +93,14 @@ class MainActivity : AppCompatActivity() {
             btnPermisoNotif.setBackgroundColor(Color.parseColor("#4CAF50"))
         }
 
-        // Si tenemos los permisos, mostramos el panel de control y arrancamos el motor
-        if (tieneFlotar && tieneNotif) {
+        if (tieneMusica) {
+            btnPermisoMusica.text = "✅ Acceso Spotify Listo"
+            btnPermisoMusica.isEnabled = false
+            btnPermisoMusica.setBackgroundColor(Color.parseColor("#4CAF50"))
+        }
+
+        // AHORA EXIGE LOS 3 PERMISOS PARA PASAR DE PANTALLA
+        if (tieneFlotar && tieneNotif && tieneMusica) {
             panelPermisos.visibility = View.GONE
             panelAjustes.visibility = View.VISIBLE
             iniciarServicioInmortal()
@@ -108,6 +120,12 @@ class MainActivity : AppCompatActivity() {
         } else true
     }
 
+    // NUEVA FUNCIÓN: Comprueba si nos diste la llave maestra de la música
+    private fun tienePermisoListenerNotificaciones(): Boolean {
+        val enabledListeners = Settings.Secure.getString(contentResolver, "enabled_notification_listeners")
+        return enabledListeners?.contains(packageName) == true
+    }
+
     private fun pedirPermisoFlotar() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             val intent = Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:$packageName"))
@@ -120,6 +138,12 @@ class MainActivity : AppCompatActivity() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.POST_NOTIFICATIONS), 100)
         }
+    }
+
+    private fun pedirPermisoListenerMusica() {
+        val intent = Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS)
+        startActivity(intent)
+        Toast.makeText(this, "Busca R-Tweaks y actívalo", Toast.LENGTH_LONG).show()
     }
 
     private fun iniciarServicioInmortal() {
