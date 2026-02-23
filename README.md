@@ -30,7 +30,7 @@
 ## 🔧 Installation & Pro Tips
 
 ### 1. Download & Install
-Download the latest `R-Tweaks.apk` from the **[Releases](link_to_your_release)** section and install it on your Android device.
+Download the latest `R-Tweaks.apk` from the **[Releases](https://github.com/Benyiiiii/R-Tweaks_NotificationApp/releases/tag/download)** section and install it on your Android device.
 
 ### 2. Grant Permissions
 The app requires:
