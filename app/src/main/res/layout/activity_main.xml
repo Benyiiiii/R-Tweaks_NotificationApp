@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent"
+              android:gravity="center_horizontal"
+              android:orientation="vertical"
+              android:background="#121212"
+              android:padding="24dp">
+
+    <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="R-Tweaks Setup"
+            android:textColor="#00E5FF"
+            android:textSize="28sp"
+            android:textStyle="bold"
+            android:layout_marginTop="20dp"
+            android:layout_marginBottom="30dp"/>
+
+    <LinearLayout
+            android:id="@+id/panel_permisos"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="#1E1E1E"
+            android:padding="16dp"
+            android:layout_marginBottom="20dp">
+
+        <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Permisos Obligatorios:"
+                android:textColor="#FFFFFF"
+                android:textStyle="bold"
+                android:layout_marginBottom="16dp"/>
+
+        <Button
+                android:id="@+id/btn_permiso_flotar"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="1. Permiso de Superposición"
+                android:backgroundTint="#FF5252"
+                android:textColor="#FFFFFF"
+                android:layout_marginBottom="10dp"/>
+
+        <Button
+                android:id="@+id/btn_permiso_notif"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="2. Permiso de Notificaciones"
+                android:backgroundTint="#FF5252"
+                android:textColor="#FFFFFF"/>
+    </LinearLayout>
+
+    <LinearLayout
+            android:id="@+id/panel_ajustes"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="#1E1E1E"
+            android:padding="16dp"
+            android:visibility="gone">
+
+        <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Ajustes de la Cápsula:"
+                android:textColor="#00E5FF"
+                android:textStyle="bold"
+                android:textSize="18sp"
+                android:layout_marginBottom="16dp"/>
+
+        <Switch
+                android:id="@+id/switch_bateria"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Avisos de Batería"
+                android:textColor="#FFFFFF"
+                android:textSize="16sp"
+                android:paddingVertical="12dp"/>
+
+        <Switch
+                android:id="@+id/switch_musica"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Avisos de Spotify"
+                android:textColor="#FFFFFF"
+                android:textSize="16sp"
+                android:paddingVertical="12dp"/>
+        <Switch
+                android:id="@+id/switch_temperatura"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Alerta de Temperatura"
+                android:textColor="#FFFFFF"
+                android:textSize="16sp"
+                android:paddingVertical="12dp"/>
+    </LinearLayout>
+
+</LinearLayout>
