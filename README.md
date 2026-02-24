@@ -36,3 +36,13 @@ Download the latest `R-Tweaks.apk` from the **[Releases](https://github.com/Beny
 The app requires:
 * **Display over other apps**: To render the capsule on top of games.
 * **Notification Access**: For media sync and background service stability.
+
+### ⚠️ Play Protect Note
+Since this is a **locally built Debug APK** and not a Google Play Store release, **Play Protect** might flag the installation or prevent you from disabling the "Scan apps" option.
+
+**Why this happens:** The app is signed with a generic debug key and requires advanced system permissions (Overlay and Notification Listener) to function. This triggers Android's security warnings by default.
+
+**How to install:**
+1. When the Play Protect dialog appears, click on **"More details"**.
+2. Select **"Install anyway"**.
+3. If you encounter issues, you can temporarily disable "Scan apps with Play Protect" in the Play Store settings (Profile > Play Protect > Gear Icon).
